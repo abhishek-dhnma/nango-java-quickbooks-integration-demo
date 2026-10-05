@@ -1,0 +1,46 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/nbactions.xml
+/nb-configuration.xml
+/bin/
+
+### VS Code ###
+.vscode/
+
+### Documentation & Local Notes (Excluded from GitHub) ###
+docs/
+*.doc
+*.docx
+
+### Secrets & Local Overrides ###
+.env
+*.env
+application-local.yml
+application-local.properties
+nango-key.txt
+*.jar
+*.log
+

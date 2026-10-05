@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: nango-spring-boot
+
+nango:
+  base-url: ${NANGO_BASE_URL:https://api.nango.dev}
+  secret-key: ${NANGO_SECRET_KEY:}
+  integration-key: ${NANGO_INTEGRATION_KEY:quickbooks-sandbox}
+  webhook:
+    signing-key: ${NANGO_WEBHOOK_SIGNING_KEY:test-signing-key}
+
+logging:
+  level:
+    com.example.nango: DEBUG
+    org.springframework.web: INFO

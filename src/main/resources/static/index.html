@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LedgerFlow | Enterprise Accounting & Billing Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Variables: Light Mode Default */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-hover: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --qb-green: #02b875;
+      --qb-green-bg: #ecfdf5;
+      --qb-green-text: #065f46;
+      --amber: #d97706;
+      --amber-bg: #fffbeb;
+      --amber-text: #92400e;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* Dark Mode Overrides */
+    [data-theme="dark"] {
+      --bg-base: #09090b;
+      --bg-surface: #121214;
+      --bg-subtle: #18181b;
+      --bg-hover: #1f1f23;
+      --border-color: #27272a;
+      --border-focus: #3f3f46;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-faint: #71717a;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --qb-green: #10b981;
+      --qb-green-bg: rgba(16, 185, 129, 0.12);
+      --qb-green-text: #34d399;
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.12);
+      --amber-text: #fbbf24;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 28px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tenant-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tenant-selector label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+    }
+
+    .tenant-selector select {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .tenant-selector select option {
+      background: var(--bg-surface);
+      color: var(--text-main);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .theme-toggle-btn {
+      padding: 7px 10px;
+    }
+
+    /* Integration Status Card */
+    .integration-hero {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hero-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .qb-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--qb-green-bg);
+      color: var(--qb-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .hero-info h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .badge-active {
+      background: var(--qb-green-bg);
+      color: var(--qb-green-text);
+    }
+
+    .badge-disconnected {
+      background: var(--amber-bg);
+      color: var(--amber-text);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* KPI Summary Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .kpi-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 4px;
+    }
+
+    .kpi-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Main Content Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .tab-link {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      padding-bottom: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .tab-link:hover {
+      color: var(--text-main);
+    }
+
+    .tab-link.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    /* Enterprise Table */
+    .table-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      padding: 12px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 18px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--bg-hover);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .items-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--primary);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+
+    .items-btn:hover {
+      background: var(--border-color);
+      border-color: var(--border-focus);
+      color: var(--primary-hover);
+    }
+
+    /* Clickable Table Rows */
+    tbody tr {
+      cursor: pointer;
+      transition: background-color 0.12s ease;
+    }
+
+    /* Slide-over Invoice Drawer */
+    .drawer-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 480px;
+      max-width: 90vw;
+      height: 100vh;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-color);
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-backdrop.open .drawer-panel {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drawer-close {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close:hover {
+      color: var(--text-main);
+      background: var(--bg-subtle);
+    }
+
+    .drawer-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .drawer-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      margin-bottom: 8px;
+    }
+
+    .drawer-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .drawer-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      font-size: 12px;
+    }
+
+    .drawer-meta-grid .label {
+      color: var(--text-faint);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .drawer-meta-grid .val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .drawer-line-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .drawer-line-table th {
+      padding: 8px 10px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-faint);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    .drawer-line-table td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .drawer-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .customer-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .customer-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .customer-item:hover {
+      border-color: var(--border-focus);
+    }
+
+    .customer-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .customer-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .row-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 5px 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .row-meta .lbl {
+      color: var(--text-faint);
+    }
+
+    .row-meta .val {
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text-main);
+      color: var(--bg-surface);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Top App Navigation Bar -->
+    <header class="navbar">
+      <div class="brand-group">
+        <div class="brand-logo">L</div>
+        <div class="brand-name">LedgerFlow</div>
+      </div>
+
+      <div class="nav-controls">
+        <div class="tenant-selector">
+          <label>Organization:</label>
+          <select id="tenantSelect" onchange="switchOrganization()">
+            <option value="tenant-1" selected>Acme Corp (Primary)</option>
+            <option value="tenant-2">West Coast Branch (Unlinked)</option>
+          </select>
+        </div>
+
+        <button class="btn" id="refreshBtn" onclick="syncData()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Sync Now
+        </button>
+
+        <button class="btn theme-toggle-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+          ☀️
+        </button>
+      </div>
+    </header>
+
+    <!-- QuickBooks Integration Card -->
+    <section class="integration-hero">
+      <div class="hero-left">
+        <div class="qb-avatar">qb</div>
+        <div class="hero-info">
+          <h2>
+            <span id="companyTitle">QuickBooks Online</span>
+            <span class="badge badge-active" id="syncStatusBadge">
+              <span class="status-dot"></span>
+              Connected
+            </span>
+          </h2>
+          <p id="companyDetails">Connected to Sandbox Company US c56a • Continuous 2-Way Sync Active</p>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <button class="btn btn-primary" id="connectBtn" onclick="startConnectionFlow()">
+          Manage Connection
+        </button>
+      </div>
+    </section>
+
+    <!-- Financial KPI Summary -->
+    <section class="kpi-row">
+      <div class="kpi-box">
+        <div class="kpi-label">Outstanding Receivables</div>
+        <div class="kpi-num" id="totalReceivables">$0.00</div>
+        <div class="kpi-desc">Total unpaid balance across invoices</div>
+      </div>
+
+      <div class="kpi-box">
+        <div class="kpi-label">Total Invoices</div>
+        <div class="kpi-num" id="totalInvoices">0</div>
+        <div class="kpi-desc">Active invoices synced</div>
+      </div>
+
+      <div class="kpi-box">
+        <div class="kpi-label">Customer Accounts</div>
+        <div class="kpi-num" id="totalCustomers">0</div>
+        <div class="kpi-desc">Active accounts in ledger</div>
+      </div>
+    </section>
+
+    <!-- Section Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-link active" onclick="showTab('invoicesView', this)">Invoices</button>
+      <button class="tab-link" onclick="showTab('customersView', this)">Customers</button>
+      <button class="tab-link" onclick="showTab('settingsView', this)">Company Profile</button>
+    </nav>
+
+    <!-- Tab 1: Invoices -->
+    <div id="invoicesView" class="tab-view active">
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Due Date</th>
+              <th>Amount</th>
+              <th>Balance</th>
+              <th>Line Items</th>
+            </tr>
+          </thead>
+          <tbody id="invoicesTableBody">
+            <tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">Loading invoices...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: Customers -->
+    <div id="customersView" class="tab-view">
+      <div class="customer-list" id="customerGrid">
+        <div style="grid-column: 1/-1; text-align: center; padding: 32px; color: var(--text-muted);">Loading customers...</div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Company Profile -->
+    <div id="settingsView" class="tab-view">
+      <div class="table-card" style="padding: 24px;">
+        <div id="companyProfileGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; font-size: 13px;">
+          Loading company details...
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Slide-over Invoice Detail Drawer -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer(event)">
+    <aside class="drawer-panel" id="drawerPanel" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <div>
+          <h3 id="drawerInvoiceTitle">Invoice #</h3>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="drawerCustomerSubtitle">—</div>
+        </div>
+        <button class="drawer-close" onclick="closeDrawer()" title="Close details (Esc)">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Overview Card -->
+        <div class="drawer-card">
+          <div class="drawer-section-title">Invoice Overview</div>
+          <div class="drawer-meta-grid">
+            <div>
+              <div class="label">Amount Due</div>
+              <div class="val" id="drawerBalanceDue" style="font-size: 16px; color: var(--amber);">$0.00</div>
+            </div>
+            <div>
+              <div class="label">Total Amount</div>
+              <div class="val" id="drawerTotalAmount" style="font-size: 16px;">$0.00</div>
+            </div>
+            <div>
+              <div class="label">Invoice Date</div>
+              <div class="val" id="drawerDate">—</div>
+            </div>
+            <div>
+              <div class="label">Due Date</div>
+              <div class="val" id="drawerDueDate">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer & Billing Details -->
+        <div class="drawer-card">
+          <div class="drawer-section-title">Billing Address & Contact</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-main);" id="drawerBillCustomer">—</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="drawerBillEmail">—</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="drawerBillAddress">—</div>
+        </div>
+
+        <!-- Line Items Table -->
+        <div>
+          <div class="drawer-section-title">Itemized Line Items</div>
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden;">
+            <table class="drawer-line-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="text-align: center;">Qty</th>
+                  <th style="text-align: right;">Unit Price</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody id="drawerLineItemsBody">
+                <tr><td colspan="4" style="text-align:center; padding: 16px; color: var(--text-faint);">No items found</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <span style="font-size: 11px; color: var(--text-faint);">QuickBooks Synced Record</span>
+        <button class="btn" onclick="closeDrawer()">Done</button>
+      </div>
+    </aside>
+  </div>
+
+  <div id="toastRoot"></div>
+
+  <script>
+    let activeOrg = 'tenant-1';
+    let currentInvoices = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check saved theme
+      const savedTheme = localStorage.getItem('app-theme') || 'light';
+      setTheme(savedTheme);
+      syncData();
+
+      // Close drawer on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDrawer();
+      });
+    });
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      setTheme(next);
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('app-theme', theme);
+      document.getElementById('themeBtn').textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+
+    function toast(msg) {
+      const root = document.getElementById('toastRoot');
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.textContent = msg;
+      root.appendChild(el);
+      setTimeout(() => el.remove(), 2800);
+    }
+
+    function showTab(viewId, el) {
+      document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    function switchOrganization() {
+      activeOrg = document.getElementById('tenantSelect').value;
+      toast(`Switched organization to ${activeOrg}`);
+      syncData();
+    }
+
+    async function syncData() {
+      const btn = document.getElementById('refreshBtn');
+      btn.style.opacity = '0.5';
+
+      try {
+        await Promise.allSettled([
+          loadCompany(),
+          loadInvoices(),
+          loadCustomers()
+        ]);
+      } finally {
+        btn.style.opacity = '1';
+      }
+    }
+
+    async function loadCompany() {
+      const res = await fetch(`/api/tenants/${activeOrg}/accounting/company`);
+      if (!res.ok) {
+        setUnlinkedUI();
+        return;
+      }
+      const data = await res.json();
+
+      document.getElementById('companyTitle').textContent = data.CompanyName || 'QuickBooks Online';
+      document.getElementById('syncStatusBadge').className = 'badge badge-active';
+      document.getElementById('syncStatusBadge').innerHTML = '<span class="status-dot"></span> Connected';
+      
+      const addr = data.CompanyAddr;
+      const addrText = addr ? `${addr.Line1 || ''}, ${addr.City || ''}, ${addr.CountrySubDivisionCode || ''}` : 'Continuous 2-Way Sync Active';
+      document.getElementById('companyDetails').textContent = `Connected to ${data.CompanyName || 'QuickBooks'} • ${addrText}`;
+      document.getElementById('connectBtn').textContent = 'Manage Connection';
+      document.getElementById('connectBtn').className = 'btn';
+
+      document.getElementById('companyProfileGrid').innerHTML = `
+        <div><span style="color:var(--text-faint)">Legal Company Name:</span><br><strong>${data.LegalName || data.CompanyName || '—'}</strong></div>
+        <div><span style="color:var(--text-faint)">Country / Region:</span><br><strong>${data.Country || 'United States'}</strong></div>
+        <div><span style="color:var(--text-faint)">Street Address:</span><br><strong>${addr?.Line1 || '—'}</strong></div>
+        <div><span style="color:var(--text-faint)">City, State & Postal:</span><br><strong>${addr?.City || ''}, ${addr?.CountrySubDivisionCode || ''} ${addr?.PostalCode || ''}</strong></div>
+        <div><span style="color:var(--text-faint)">Fiscal Year Start:</span><br><strong>${data.FiscalYearStartMonth || 'January'}</strong></div>
+      `;
+    }
+
+    function setUnlinkedUI() {
+      document.getElementById('companyTitle').textContent = 'QuickBooks Online';
+      document.getElementById('syncStatusBadge').className = 'badge badge-disconnected';
+      document.getElementById('syncStatusBadge').innerHTML = '<span class="status-dot"></span> Disconnected';
+      document.getElementById('companyDetails').textContent = 'No accounting account linked to this organization.';
+      document.getElementById('connectBtn').textContent = 'Connect QuickBooks';
+      document.getElementById('connectBtn').className = 'btn btn-primary';
+
+      document.getElementById('invoicesTableBody').innerHTML = 
+        `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">No accounting provider connected for this organization. Click "Connect QuickBooks" above.</td></tr>`;
+      document.getElementById('customerGrid').innerHTML = 
+        `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No customer records found.</div>`;
+      document.getElementById('totalReceivables').textContent = '$0.00';
+      document.getElementById('totalInvoices').textContent = '0';
+      document.getElementById('totalCustomers').textContent = '0';
+    }
+
+    async function loadInvoices() {
+      const res = await fetch(`/api/tenants/${activeOrg}/accounting/invoices?limit=10`);
+      if (!res.ok) return;
+      const invoices = await res.json();
+      currentInvoices = invoices;
+
+      let balanceSum = 0;
+      const tbody = document.getElementById('invoicesTableBody');
+      tbody.innerHTML = invoices.map(inv => {
+        balanceSum += (inv.Balance || 0);
+        const customerName = inv.CustomerRef?.name || 'Customer';
+        const lines = (inv.Line || []).filter(l => l.DetailType === 'SalesItemLineDetail');
+
+        return `
+          <tr onclick="openInvoiceDrawer('${inv.Id}')" title="Click to view itemized invoice">
+            <td class="mono"><strong>#${inv.DocNumber || inv.Id}</strong></td>
+            <td>
+              <strong>${customerName}</strong>
+              <div style="font-size: 11px; color: var(--text-muted);">${inv.BillEmail?.Address || ''}</div>
+            </td>
+            <td class="mono">${inv.TxnDate || '—'}</td>
+            <td class="mono">${inv.DueDate || '—'}</td>
+            <td class="mono"><strong>$${(inv.TotalAmt || 0).toFixed(2)}</strong></td>
+            <td>
+              <span class="badge ${inv.Balance > 0 ? 'badge-disconnected' : 'badge-active'} mono">
+                $${(inv.Balance || 0).toFixed(2)}
+              </span>
+            </td>
+            <td>
+              <button class="items-btn" onclick="event.stopPropagation(); openInvoiceDrawer('${inv.Id}')">
+                ${lines.length} items →
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('totalInvoices').textContent = invoices.length;
+      document.getElementById('totalReceivables').textContent = `$${balanceSum.toFixed(2)}`;
+    }
+
+    function openInvoiceDrawer(invoiceId) {
+      const inv = currentInvoices.find(i => String(i.Id) === String(invoiceId));
+      if (!inv) return;
+
+      const customerName = inv.CustomerRef?.name || 'Customer';
+      const lines = (inv.Line || []).filter(l => l.DetailType === 'SalesItemLineDetail');
+      const bAddr = inv.BillAddr;
+      const addrStr = bAddr ? `${bAddr.Line1 || ''} ${bAddr.City || ''} ${bAddr.CountrySubDivisionCode || ''} ${bAddr.PostalCode || ''}`.trim() : 'No address on file';
+
+      document.getElementById('drawerInvoiceTitle').textContent = `Invoice #${inv.DocNumber || inv.Id}`;
+      document.getElementById('drawerCustomerSubtitle').textContent = customerName;
+      document.getElementById('drawerBalanceDue').textContent = `$${(inv.Balance || 0).toFixed(2)}`;
+      document.getElementById('drawerBalanceDue').style.color = (inv.Balance > 0) ? 'var(--amber)' : 'var(--qb-green)';
+      document.getElementById('drawerTotalAmount').textContent = `$${(inv.TotalAmt || 0).toFixed(2)}`;
+      document.getElementById('drawerDate').textContent = inv.TxnDate || '—';
+      document.getElementById('drawerDueDate').textContent = inv.DueDate || '—';
+
+      document.getElementById('drawerBillCustomer').textContent = customerName;
+      document.getElementById('drawerBillEmail').textContent = inv.BillEmail?.Address || 'No billing email specified';
+      document.getElementById('drawerBillAddress').textContent = addrStr || 'No physical address';
+
+      const tbody = document.getElementById('drawerLineItemsBody');
+      if (lines.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-faint);">No product line items recorded</td></tr>`;
+      } else {
+        tbody.innerHTML = lines.map((l, idx) => {
+          const detail = l.SalesItemLineDetail || {};
+          const qty = detail.Qty || 1;
+          const rate = detail.UnitPrice || (l.Amount ? l.Amount / qty : 0);
+          return `
+            <tr>
+              <td>
+                <strong>${l.Description || 'Item'}</strong>
+                <div style="font-size: 10px; color: var(--text-faint);">Line #${l.LineNum || idx + 1}</div>
+              </td>
+              <td style="text-align: center;" class="mono">${qty}</td>
+              <td style="text-align: right;" class="mono">$${Number(rate).toFixed(2)}</td>
+              <td style="text-align: right;" class="mono"><strong>$${(l.Amount || 0).toFixed(2)}</strong></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('drawerBackdrop').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerBackdrop').classList.remove('open');
+    }
+
+    async function loadCustomers() {
+      const res = await fetch(`/api/tenants/${activeOrg}/accounting/customers?limit=10`);
+      if (!res.ok) return;
+      const customers = await res.json();
+
+      document.getElementById('totalCustomers').textContent = customers.length;
+      const grid = document.getElementById('customerGrid');
+      grid.innerHTML = customers.map(c => `
+        <div class="customer-item">
+          <div class="customer-name">${c.DisplayName || c.GivenName || 'Customer'}</div>
+          <div class="customer-sub">${c.CompanyName || 'Individual Client'}</div>
+          <div class="row-meta">
+            <span class="lbl">Email</span>
+            <span class="val" style="font-size:11px;">${c.PrimaryEmailAddr?.Address || '—'}</span>
+          </div>
+          <div class="row-meta">
+            <span class="lbl">Phone</span>
+            <span class="val">${c.PrimaryPhone?.FreeFormNumber || '—'}</span>
+          </div>
+          <div class="row-meta">
+            <span class="lbl">Current Balance</span>
+            <span class="val" style="color: ${c.Balance > 0 ? 'var(--amber)' : 'var(--text-main)'}">$${(c.Balance || 0).toFixed(2)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function startConnectionFlow() {
+      toast(`Initiating QuickBooks Online authorization...`);
+      try {
+        const res = await fetch(`/api/tenants/${activeOrg}/accounting/connect`, { method: 'POST' });
+        const data = await res.json();
+        if (data.connect_link) {
+          const popup = window.open(data.connect_link, 'ConnectQuickBooks', 'width=620,height=750');
+          const timer = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(timer);
+              toast('Authorization complete! Refreshing ledger...');
+              syncData();
+            }
+          }, 1000);
+        }
+      } catch (err) {
+        toast('Connection error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "records": [
+    {
+      "id": "2c92c08564e2e3080164e322ef450001",
+      "subscriptionNumber": "A-S00000042",
+      "accountId": "2c92c0f864e2e2830164e321e0580000",
+      "status": "Active",
+      "termStartDate": "2026-01-01",
+      "termEndDate": "2027-01-01",
+      "autoRenew": true,
+      "version": 1,
+      "_nango_metadata": {
+        "deleted_at": null,
+        "last_action": "ADDED",
+        "first_seen_at": "2026-10-03T12:00:00.000Z",
+        "last_modified_at": "2026-10-03T12:00:00.000Z",
+        "cursor": "cursor-sample-1234"
+      }
+    }
+  ],
+  "next_cursor": null
+}

@@ -1,0 +1,22 @@
+{
+  "error": {
+    "message": "Action http error",
+    "code": "ACTION_HTTP_ERROR",
+    "payload": {},
+    "upstream": {
+      "status": 404,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "success": false,
+        "reasons": [
+          {
+            "code": "50000040",
+            "message": "Subscription not found"
+          }
+        ]
+      }
+    }
+  }
+}

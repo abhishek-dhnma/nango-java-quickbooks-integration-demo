@@ -1,0 +1,11 @@
+{
+  "id": "2c92c08564e2e3080164e322ef450001",
+  "subscriptionNumber": "A-S00000042",
+  "accountId": "2c92c0f864e2e2830164e321e0580000",
+  "accountName": "Acme Corporation",
+  "status": "Active",
+  "termStartDate": "2026-01-01",
+  "termEndDate": "2027-01-01",
+  "autoRenew": true,
+  "planName": "Enterprise Tier"
+}
