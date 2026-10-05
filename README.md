@@ -1,271 +1,410 @@
-# Nango + QuickBooks Online + Spring Boot: An Enterprise Java Reference Implementation
+# QuickBooks Online Integration with Nango and Spring Boot
 
-> **A 100% live-verified reference architecture and technical guide demonstrating how enterprise Java and Spring Boot engineering teams build resilient multi-tenant SaaS accounting integrations using Nango's REST API.**
+A simple example of integrating **Nango** with a **Java Spring Boot** application to connect with **QuickBooks Online**.
 
----
+This project demonstrates how a Spring Boot backend can use Nango to manage a QuickBooks Online connection and access data such as company information, customers, and invoices.
 
-## 1. Why This Project Exists
-
-Most integration content and tutorials in the developer ecosystem focus on Node.js / TypeScript developers building AI chatbots or Slack bots.
-
-However, mission-critical ERP, accounting, invoicing, and subscription ledgers at B2B and mid-market SaaS companies are overwhelmingly built on **Java and Spring Boot**. When an enterprise team evaluates Nango for financial integrations like **QuickBooks Online**, they encounter an immediate reality:
-
-1. **Nango's Java SDK is marked "Coming soon"**: The official documentation recommends using Nango's REST API directly.
-2. **Multi-Tenant Complexity**: Accounting platforms like Intuit QuickBooks require strict multi-tenant authorization, company ID (`realmId`) scoping, and continuous token lifecycle management.
-3. **Enterprise Resilience**: Java backends require typed data structures, robust HTTP error translation (RFC 7807 `ProblemDetail`), rate limit backoff handling, and HMAC webhook verification without stream consumption bugs.
-
-This reference implementation answers the core question:  
-**What does a production-ready, idiomatic Spring Boot integration look like when consuming Nango's REST API against live QuickBooks Online data?**
+The project uses a **QuickBooks Online Sandbox** environment, so it can be used for learning and experimentation without connecting to a production company.
 
 ---
 
-## 2. 100% Live-Verified Architecture
+## What this project demonstrates
 
-Unlike mock-only tutorials or theoretical design documents, **every component of this project has been executed and verified live against active cloud infrastructure**:
-
-* **Live Identity Provider**: Intuit Developer Platform (`developer.intuit.com`) via OAuth 2.0.
-* **Live Target System**: QuickBooks Online Sandbox company (`Sandbox Company US c56a`, Realm ID: `9341458413053036`).
-* **Live Integration Gateway**: Nango Cloud (`api.nango.dev`), managing token vaults, automatic OAuth refresh, and dynamic request proxying.
-* **Live Backend**: Spring Boot 3.3.4 running Java 17, consuming Nango via modern Spring 6 `RestClient`.
-
-```
-[ Frontend / Tenant Admin ]
-           │
-           │ 1. POST /api/tenants/{id}/accounting/connect
-           ▼
-┌──────────────────────────────────────────────┐
-│       Spring Boot 3.3 Backend                │
-│                                              │
-│  - TenantAccountingController                │
-│  - QuickBooksAccountingService               │
-│  - Idiomatic NangoClient (Spring RestClient) │
-│  - RFC 7807 GlobalIntegrationExceptionHandler│
-│  - WebhookContentCachingFilter (HMAC-SHA256) │
-└──────────────────────┬───────────────────────┘
-                       │
-                       │ 2. Authenticated REST calls (Bearer NANGO_SECRET_KEY)
-                       ▼
-┌──────────────────────────────────────────────┐
-│           Nango Cloud Platform               │
-│                                              │
-│  - OAuth 2.0 Credential Vault & Refresh      │
-│  - Connect Session Service (/connect/sessions)│
-│  - Requests Proxy (/proxy/v3/company/...)    │
-│  - Signature-verified Webhooks               │
-└──────────────────────┬───────────────────────┘
-                       │
-                       │ 3. Injected Bearer Token & Realm ID Scoping
-                       ▼
-┌──────────────────────────────────────────────┐
-│         Intuit QuickBooks Online             │
-│        (Sandbox Company US c56a)             │
-│                                              │
-│  - Company Metadata API                      │
-│  - Customer Ledger Query API                 │
-│  - Invoice & Line-Item Query API             │
-└──────────────────────────────────────────────┘
-```
+- Connecting a Spring Boot application with Nango
+- Creating a Nango Connect Session
+- Connecting a QuickBooks Online Sandbox account
+- Authorizing a QuickBooks Online connection
+- Making authenticated requests through Nango
+- Retrieving QuickBooks Online company information
+- Retrieving customers
+- Retrieving invoices
+- Handling API errors in Spring Boot
+- Verifying webhook signatures
+- Testing the integration with JUnit
 
 ---
 
-## 3. Key Technical Challenges & Solutions
+## Architecture
 
-### 1. Modern Spring 6 `RestClient` for Nango's REST API
-Because Nango's Java SDK is marked "Coming soon", this project provides a clean, typed `NangoClient` utilizing Spring Boot 3's modern `RestClient`. It encapsulates:
-* Automatic `Bearer <secret-key>` injection.
-* Clean proxy forwarding with `Connection-Id` and `Provider-Config-Key` headers.
-* Strongly-typed Java records for request payloads and responses (`QuickBooksInvoice`, `QuickBooksCustomer`, `QuickBooksCompanyInfo`).
+The integration follows this basic flow:
 
-### 2. Multi-Tenant Company (`realmId`) Resolution
-QuickBooks Online endpoints require the target company's `realmId` in the path (e.g. `v3/company/{realmId}/query`).
-During the OAuth handshake, Nango automatically stores this in the connection configuration:
-```json
-{
-  "connection_id": "c5a55682-b9f5-4798-a1a0-55dbdb7f7e4b",
-  "provider_config_key": "quickbooks-sandbox",
-  "connection_config": {
-    "realmId": "9341458413053036"
-  }
-}
+```mermaid
+flowchart TD
+    A["Spring Boot App<br/>Java + REST APIs<br/><small>Application logic</small>"]
+    B["Nango<br/>OAuth + Connections<br/><small>Connection and authentication</small>"]
+    C["QuickBooks Online<br/>Sandbox<br/><small>Abhishek Demo Company</small>"]
+
+    A -->|Nango API| B
+    B -->|Authenticated request| C
 ```
-Our `QuickBooksAccountingServiceImpl` dynamically resolves and caches the `realmId` per tenant connection, preventing hardcoded company IDs and maintaining strict tenant isolation.
 
-### 3. Java Exception Mapping to RFC 7807 ProblemDetail
-Nango returns standard HTTP error codes:
-* `404 Not Found` (when a connection has not been authorized)
-* `424 Failed Dependency` (when the upstream integration provider rejects a call)
-* `429 Too Many Requests` (when provider or Nango rate limits are hit, carrying `Retry-After`)
+The Spring Boot application communicates with Nango, while Nango handles the connection with QuickBooks Online.
 
-Our `NangoResponseErrorHandler` and `GlobalIntegrationExceptionHandler` map these upstream statuses directly into RFC 7807 `ProblemDetail` structures compliant with modern enterprise API design.
-
-### 4. Servlet Stream Re-readability in Webhook HMAC Verification
-Cryptographic verification of Nango webhooks requires hashing the exact raw request bytes with HMAC-SHA256. In a standard Spring Boot application, reading the `HttpServletRequest.getInputStream()` consumes the stream, causing downstream Jackson deserializers to fail with `HttpMessageNotReadableException`.
-
-We solved this using a custom `WebhookContentCachingFilter` and Spring's `ContentCachingRequestWrapper`, enabling signature verification and JSON body parsing on the same request.
+Once the connection is established, the application can make requests through Nango to retrieve data from the QuickBooks Online Sandbox.
 
 ---
 
-## 4. Live API Walkthrough & Verification
+## Technologies
 
-All commands below run against the live, running Spring Boot server connected to Nango Cloud and QuickBooks Online Sandbox:
-
-### A. Generate Hosted Nango Connect Link for a Tenant
-Initiates a new authorization session with an explicit `end_user` payload:
-```bash
-curl -X POST http://localhost:8080/api/tenants/tenant-2/accounting/connect
-```
-**Response**:
-```json
-{
-  "token": "nango_connect_session_f7b47622c5760da26c9d0e6de4832efc76e43e6cc66f4933d7bb59e84b7325ea",
-  "connect_link": "https://connect.nango.dev/?session_token=nango_connect_session_f7b47622c5760da26c9d0e6de4832efc76e43e6cc66f4933d7bb59e84b7325ea",
-  "expires_at": "2026-10-03T14:59:17.954Z"
-}
-```
-
-### B. Fetch Live Company Info via Nango Proxy
-Calls `/proxy/v3/company/{realmId}/companyinfo/{realmId}`:
-```bash
-curl http://localhost:8080/api/tenants/tenant-1/accounting/company
-```
-**Response**:
-```json
-{
-  "CompanyName": "Sandbox Company US c56a",
-  "LegalName": "Sandbox Company US c56a",
-  "CompanyAddr": {
-    "Line1": "123 Sierra Way",
-    "City": "San Pablo",
-    "CountrySubDivisionCode": "CA",
-    "PostalCode": "87999"
-  },
-  "Country": "US",
-  "FiscalYearStartMonth": "January"
-}
-```
-
-### C. Fetch Live Invoices via Nango Proxy Query
-Executes a live query against QuickBooks Online (`select * from Invoice maxresults 2`):
-```bash
-curl "http://localhost:8080/api/tenants/tenant-1/accounting/invoices?limit=2"
-```
-**Response**:
-```json
-[
-  {
-    "Id": "130",
-    "DocNumber": "1037",
-    "TxnDate": "2026-09-06",
-    "DueDate": "2026-10-06",
-    "TotalAmt": 362.07,
-    "Balance": 362.07,
-    "CustomerRef": {
-      "value": "24",
-      "name": "Sonnenschein Family Store"
-    },
-    "BillEmail": {
-      "Address": "Familiystore@intuit.com"
-    },
-    "Line": [
-      {
-        "Id": "1",
-        "LineNum": 1,
-        "Description": "Rock Fountain",
-        "Amount": 275.00,
-        "DetailType": "SalesItemLineDetail"
-      },
-      {
-        "Id": "2",
-        "LineNum": 2,
-        "Description": "Fountain Pump",
-        "Amount": 12.75,
-        "DetailType": "SalesItemLineDetail"
-      }
-    ]
-  }
-]
-```
-
-### D. Fetch Live Customers
-Executes a live query against QuickBooks Online (`select * from Customer maxresults 2`):
-```bash
-curl "http://localhost:8080/api/tenants/tenant-1/accounting/customers?limit=2"
-```
-**Response**:
-```json
-[
-  {
-    "Id": "8",
-    "DisplayName": "0969 Ocean View Road",
-    "GivenName": "Sasha",
-    "FamilyName": "Tillou",
-    "CompanyName": "Freeman Sporting Goods",
-    "Active": true,
-    "Balance": 477.5,
-    "PrimaryEmailAddr": {
-      "Address": "Sporting_goods@intuit.com"
-    },
-    "PrimaryPhone": {
-      "FreeFormNumber": "(415) 555-9933"
-    }
-  }
-]
-```
+- **Java 17+**
+- **Spring Boot 3**
+- **Maven**
+- **Nango**
+- **QuickBooks Online API**
+- **OAuth 2.0**
+- **REST APIs**
+- **JUnit**
 
 ---
 
-## 5. Automated Test Suite
+## Project Structure
 
-The test suite covers contract accuracy, HMAC signature verification, and HTTP error handling without relying on external network calls during CI:
+The project is organized around a few main components:
 
-```bash
-mvn test
+```text
+src/
+├── main/
+│   └── java/
+│       └── com/example/nango/
+│           ├── controller/
+│           ├── service/
+│           ├── client/
+│           ├── model/
+│           ├── exception/
+│           └── webhook/
+│
+└── test/
+    └── java/
 ```
 
-### Test Results
-```
-[INFO] Running com.example.nango.NangoClientIntegrationTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
-[INFO] Running com.example.nango.NangoWebhookVerificationTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
-[INFO] Running com.example.nango.TenantAccountingControllerTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS (12 tests total, 0 failures)
-```
+The main responsibilities are:
+
+| Component | Responsibility |
+|---|---|
+| Controller | Exposes REST endpoints for the demo |
+| Service | Contains QuickBooks integration logic |
+| Nango Client | Communicates with the Nango API |
+| Model | Represents QuickBooks data |
+| Exception Handler | Handles API errors |
+| Webhook Verification | Verifies incoming webhook requests |
 
 ---
 
-## 6. How to Run Locally
+# Getting Started
 
-### Prerequisites
+## Prerequisites
+
+Before running the project, you will need:
+
 - Java 17 or higher
-- Maven 3.6.3+ (or Maven 3.9+)
-- A Nango account (`app.nango.dev`) with a configured `quickbooks-sandbox` integration
-- Intuit Developer sandbox account
+- Maven 3.6+
+- A Nango account
+- A QuickBooks Online Developer account
+- A QuickBooks Online Sandbox company
+- A QuickBooks integration configured in Nango
 
-### Environment Configuration
-Copy `.env.example` to `.env` and populate your secrets:
+---
+
+# 1. Create a QuickBooks Online Sandbox
+
+QuickBooks Online provides a Sandbox environment for development and testing.
+
+Create a developer account through the Intuit Developer Portal and create a Sandbox company.
+
+For this project, the example company is:
+
+**Abhishek Demo Company**
+
+You can use your own QuickBooks Sandbox company when following this guide.
+
+### Configure the QuickBooks application
+
+When creating the application, configure the required QuickBooks Online permissions/scopes for the resources you want to access.
+
+For this example, the application works with resources such as:
+
+- Company information
+- Customers
+- Invoices
+
+Make sure the required permissions are enabled for your application before connecting it through Nango.
+
+---
+
+# 2. Configure the QuickBooks Integration in Nango
+
+Create a Nango account and configure the QuickBooks integration.
+
+Nango is used in this project to manage the connection between the application and QuickBooks Online.
+
+You will need the appropriate Nango configuration and secret key for the Spring Boot application.
+
+The application reads the Nango secret from an environment variable:
+
+```text
+NANGO_SECRET_KEY
+```
+
+Keep this value private and do not commit it to GitHub.
+
+---
+
+# 3. Configure Environment Variables
+
+Create a local `.env` file from the example environment file:
+
 ```bash
 cp .env.example .env
 ```
-*(The `.env` file is git-ignored and will never be committed to source control).*
 
-### Launch
+Add the required configuration.
 
-**On Windows (PowerShell)**:
-```powershell
-# Automatically loads .env and starts the server:
-.\run.ps1
+For example:
 
-# Or run tests:
-.\run.ps1 test
+```text
+NANGO_SECRET_KEY=your_nango_secret_key
 ```
 
-**On Linux / macOS**:
+Depending on the project configuration, additional environment variables may be required.
+
+Never commit your `.env` file or credentials to source control.
+
+---
+
+# 4. Start the Application
+
+### Windows
+
+Run:
+
+```powershell
+.\run.ps1
+```
+
+### Linux / macOS
+
+Run:
+
 ```bash
 export $(cat .env | xargs)
 mvn spring-boot:run
 ```
 
-Server starts on `http://localhost:8080`.
+The application starts on:
+
+```text
+http://localhost:8080
+```
+
+---
+
+# Connecting QuickBooks Online
+
+## 5. Create a Nango Connect Session
+
+The Spring Boot application exposes an endpoint for creating a Nango Connect Session.
+
+Example:
+
+```bash
+curl -X POST http://localhost:8080/api/tenants/demo-company/accounting/connect
+```
+
+The application sends the request to Nango and receives a connection link.
+
+Open the connection link and follow the authorization flow to connect the QuickBooks Online Sandbox.
+
+After authorization, the connection can be used by the Spring Boot application for subsequent requests.
+
+---
+
+# Working with QuickBooks Data
+
+Once the connection is established, the application can request data from QuickBooks Online through Nango.
+
+## 6. Fetch Company Information
+
+Use the following endpoint:
+
+```bash
+curl http://localhost:8080/api/tenants/demo-company/accounting/company
+```
+
+The Spring Boot application sends the request through Nango to QuickBooks Online.
+
+Example response:
+
+```json
+{
+  "CompanyName": "Abhishek Demo Company",
+  "LegalName": "Abhishek Demo Company",
+  "Country": "US",
+  "FiscalYearStartMonth": "January"
+}
+```
+
+The actual response depends on the information configured in your QuickBooks Sandbox company.
+
+---
+
+## 7. Fetch Invoices
+
+The project also demonstrates retrieving invoices from QuickBooks Online.
+
+Example:
+
+```bash
+curl "http://localhost:8080/api/tenants/demo-company/accounting/invoices?limit=2"
+```
+
+The application sends a QuickBooks query through Nango and maps the response to Java objects.
+
+Example:
+
+```json
+[
+  {
+    "Id": "1",
+    "DocNumber": "1001",
+    "TxnDate": "2026-09-06",
+    "TotalAmt": 362.07,
+    "Balance": 362.07
+  }
+]
+```
+
+The actual data will depend on the invoices available in your Sandbox company.
+
+---
+
+## 8. Fetch Customers
+
+Customers can be retrieved using the same integration flow.
+
+Example:
+
+```bash
+curl "http://localhost:8080/api/tenants/demo-company/accounting/customers?limit=2"
+```
+
+Example response:
+
+```json
+[
+  {
+    "Id": "1",
+    "DisplayName": "Demo Customer",
+    "GivenName": "John",
+    "FamilyName": "Doe",
+    "Active": true
+  }
+]
+```
+
+The returned data depends on the customers available in your QuickBooks Sandbox.
+
+---
+
+# Webhooks
+
+## 9. Webhook Verification
+
+The project includes an example of verifying webhook requests.
+
+When a webhook is received, the application verifies the request signature using **HMAC-SHA256** before processing the request.
+
+The application uses Spring's request caching support so that the request body can be used for both signature verification and JSON deserialization.
+
+This provides a simple example of handling signed webhook requests in a Spring Boot application.
+
+---
+
+# Error Handling
+
+## 10. API Error Handling
+
+The application includes basic handling for errors returned by Nango and the connected provider.
+
+Some examples include:
+
+- `404 Not Found`
+- `424 Failed Dependency`
+- `429 Too Many Requests`
+
+The application maps these errors into appropriate API responses using Spring's `ProblemDetail` support.
+
+This keeps errors returned by the integration understandable to clients of the Spring Boot API.
+
+---
+
+# Testing
+
+## 11. Run the Tests
+
+The project includes tests for the main integration components.
+
+Run:
+
+```bash
+mvn test
+```
+
+The test suite covers areas such as:
+
+- Nango client behavior
+- Webhook signature verification
+- Controller behavior
+- HTTP error handling
+
+The tests are designed so that the main test suite does not require a live QuickBooks connection.
+
+---
+
+# Example Endpoints
+
+The demo application exposes endpoints similar to:
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/tenants/{tenantId}/accounting/connect` | Create a Nango connection session |
+| `GET` | `/api/tenants/{tenantId}/accounting/company` | Retrieve company information |
+| `GET` | `/api/tenants/{tenantId}/accounting/invoices` | Retrieve invoices |
+| `GET` | `/api/tenants/{tenantId}/accounting/customers` | Retrieve customers |
+
+The exact endpoints may vary depending on the implementation.
+
+---
+
+# Why Nango?
+
+This project uses Nango as the connection layer between the Spring Boot application and QuickBooks Online.
+
+Instead of implementing the connection flow directly inside the application, the project delegates the connection and authentication workflow to Nango.
+
+This allows the Spring Boot application to focus on the application logic and the data it needs from QuickBooks Online.
+
+The same approach can be useful when working with multiple external services and integrations.
+
+---
+
+# Project Goal
+
+The goal of this project is to provide a **small and practical example of using Nango with Java and Spring Boot**.
+
+It demonstrates the complete flow from creating a connection to accessing data from a QuickBooks Online Sandbox.
+
+The project is intended to be easy to understand and useful as a starting point for developers who want to experiment with Nango from a Java backend.
+
+---
+
+# Disclaimer
+
+This repository is a **learning and demonstration project**.
+
+It is intended to demonstrate the integration flow between Spring Boot, Nango, and QuickBooks Online Sandbox. The implementation may need additional configuration, validation, error handling, monitoring, and security considerations before being used in a real application.
+
+---
+
+# License
+
+This project is available for learning and experimentation.
