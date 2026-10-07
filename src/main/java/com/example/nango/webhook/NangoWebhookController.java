@@ -49,7 +49,8 @@ public class NangoWebhookController {
         log.info("Received verified Nango webhook: type={}, operation={}, connectionId={}",
                 payload.type(), payload.operation(), payload.connectionId());
 
-        if ("auth".equalsIgnoreCase(payload.type()) && "creation".equalsIgnoreCase(payload.operation())) {
+        if ("auth".equalsIgnoreCase(payload.type()) && "creation".equalsIgnoreCase(payload.operation())
+                && Boolean.TRUE.equals(payload.success())) {
             handleAuthCreation(payload);
         } else if ("sync".equalsIgnoreCase(payload.type())) {
             log.info("Nango background sync completed for model: {}, success: {}",

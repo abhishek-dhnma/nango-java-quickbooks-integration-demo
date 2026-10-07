@@ -16,9 +16,6 @@ public class InMemoryTenantRepository implements TenantRepository {
     private final Map<String, String> connectionToTenantMap = new ConcurrentHashMap<>();
 
     public InMemoryTenantRepository() {
-        // Pre-seed test tenants mapped to the live QuickBooks Sandbox connection
-        saveTenantConnection("tenant-1", "c5a55682-b9f5-4798-a1a0-55dbdb7f7e4b");
-        saveTenantConnection("tenant-default", "c5a55682-b9f5-4798-a1a0-55dbdb7f7e4b");
     }
 
     @Override

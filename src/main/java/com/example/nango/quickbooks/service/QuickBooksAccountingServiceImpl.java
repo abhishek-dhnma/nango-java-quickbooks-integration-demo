@@ -40,7 +40,8 @@ public class QuickBooksAccountingServiceImpl implements QuickBooksAccountingServ
     @Override
     public NangoConnectSessionResponse initiateAccountingConnection(String tenantId) {
         var endUser = new com.example.nango.client.model.NangoEndUser(tenantId);
-        return nangoClient.createConnectSession(List.of(integrationKey), endUser);
+        Map<String, String> tags = Map.of("organization_id", tenantId);
+        return nangoClient.createConnectSession(List.of(integrationKey), endUser, tags);
     }
 
     @Override
