@@ -44,7 +44,7 @@ public class NangoClientImpl implements NangoClient {
             List<String> allowedIntegrations,
             NangoEndUser endUser,
             Map<String, String> tags) {
-        NangoConnectSessionRequest request = new NangoConnectSessionRequest(allowedIntegrations, endUser, tags, null);
+        NangoConnectSessionRequest request = new NangoConnectSessionRequest(allowedIntegrations, endUser, tags);
 
         return restClient.post()
                 .uri("/connect/sessions")
@@ -58,11 +58,29 @@ public class NangoClientImpl implements NangoClient {
     public NangoConnection getConnection(String connectionId, String integrationKey) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/connections/{connectionId}")
+                        .path("/connection/{connectionId}")
                         .queryParam("provider_config_key", integrationKey)
                         .build(connectionId))
                 .retrieve()
                 .body(NangoConnection.class);
+    }
+
+    @Override
+    public List<NangoConnection> listConnections(String integrationKey) {
+        NangoConnectionsResponse response = restClient.get()
+                .uri("/connection")
+                .retrieve()
+                .body(NangoConnectionsResponse.class);
+
+        if (response != null && response.connections() != null) {
+            if (integrationKey != null && !integrationKey.isBlank()) {
+                return response.connections().stream()
+                        .filter(c -> integrationKey.equalsIgnoreCase(c.providerConfigKey()))
+                        .toList();
+            }
+            return response.connections();
+        }
+        return List.of();
     }
 
     @Override

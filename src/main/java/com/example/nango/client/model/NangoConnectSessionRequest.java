@@ -18,4 +18,8 @@ public record NangoConnectSessionRequest(
     public NangoConnectSessionRequest(List<String> allowedIntegrations, NangoEndUser endUser) {
         this(allowedIntegrations, endUser, null, null);
     }
+
+    public NangoConnectSessionRequest(List<String> allowedIntegrations, NangoEndUser endUser, Map<String, String> tags) {
+        this(allowedIntegrations, endUser, tags, null);
+    }
 }

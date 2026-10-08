@@ -28,6 +28,11 @@ public interface NangoClient {
     NangoConnection getConnection(String connectionId, String integrationKey);
 
     /**
+     * Lists active connections for an integration (GET /connections).
+     */
+    List<NangoConnection> listConnections(String integrationKey);
+
+    /**
      * Executes an authenticated GET request through Nango's requests proxy (GET /proxy/{path}).
      */
     <T> T proxyGet(String connectionId, String integrationKey, String path, Map<String, String> queryParams, Class<T> responseType);

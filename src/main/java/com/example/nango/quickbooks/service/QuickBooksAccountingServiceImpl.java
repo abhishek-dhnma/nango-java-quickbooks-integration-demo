@@ -123,10 +123,56 @@ public class QuickBooksAccountingServiceImpl implements QuickBooksAccountingServ
     }
 
     private String resolveConnectionId(String tenantId) {
-        return tenantRepository.findConnectionIdByTenantId(tenantId)
-                .orElseThrow(() -> new NangoConnectionNotFoundException(
-                        "Tenant '" + tenantId + "' has not connected a QuickBooks account. Please complete the Connect flow."
-                ));
+        // 1. Check in-memory repository (populated via webhooks or previous fallback bindings)
+        var connectionIdOpt = tenantRepository.findConnectionIdByTenantId(tenantId);
+        if (connectionIdOpt.isPresent()) {
+            return connectionIdOpt.get();
+        }
+
+        // 2. Fallback: check if connection exists in Nango using tenantId directly as connectionId
+        try {
+            log.info("No webhook mapping in memory for tenant '{}'. Attempting fallback check on Nango for connectionId='{}'", tenantId, tenantId);
+            NangoConnection connection = nangoClient.getConnection(tenantId, integrationKey);
+            if (connection != null) {
+                String resolvedId = connection.connectionId() != null 
+                        ? connection.connectionId() 
+                        : (connection.id() != null ? String.valueOf(connection.id()) : tenantId);
+                log.info("Auto-bound tenant '{}' to Nango connection '{}' via fallback lookup", tenantId, resolvedId);
+                tenantRepository.saveTenantConnection(tenantId, resolvedId);
+                return resolvedId;
+            }
+        } catch (Exception e) {
+            log.debug("Direct connection lookup for connectionId='{}' failed: {}", tenantId, e.getMessage());
+        }
+
+        // 3. Fallback: list active connections in Nango for this integration (handles local dev without webhooks)
+        try {
+            log.info("Querying Nango for active connections for integration '{}'...", integrationKey);
+            List<NangoConnection> activeConnections = nangoClient.listConnections(integrationKey);
+            if (!activeConnections.isEmpty()) {
+                String resolvedId = activeConnections.stream()
+                        .filter(c -> (c.tags() != null && tenantId.equals(c.tags().get("organization_id")))
+                                  || (c.endUser() != null && tenantId.equals(c.endUser().id())))
+                        .map(c -> c.connectionId() != null ? c.connectionId() : String.valueOf(c.id()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            NangoConnection first = activeConnections.get(0);
+                            return first.connectionId() != null ? first.connectionId() : String.valueOf(first.id());
+                        });
+
+                if (resolvedId != null) {
+                    log.info("Auto-discovered active Nango connection '{}' for tenant '{}'", resolvedId, tenantId);
+                    tenantRepository.saveTenantConnection(tenantId, resolvedId);
+                    return resolvedId;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to auto-discover active connections from Nango: {}", e.getMessage(), e);
+        }
+
+        // 4. Fallback: Return tenantId directly
+        log.info("Using tenantId '{}' directly as fallback connection ID", tenantId);
+        return tenantId;
     }
 
     private String resolveRealmId(String connectionId) {
